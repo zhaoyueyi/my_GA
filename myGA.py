@@ -8,6 +8,7 @@
 
 # coding:utf-8
 import numpy as np
+from typing import Tuple
 
 precision = 0.001
 s_range = (0, 1)
@@ -149,14 +150,85 @@ fitness_function = fitness_sphere
 
 
 class myGA:
-    def __init__(self):
+    def __init__(self,
+                 num_gene,
+                 num_pop,
+                 range_gene: Tuple[2],
+                 fitness_func,
+                 num_parents,
+                 num_generation):
         # initial first population -> np.array[[x,x], [x,x], [x,x], ...]
         #   num_gene:2 [xx, xx]
         #   num_pop
         #   range_init_value
+
+
+        if not callable(fitness_func) or fitness_func.__code__.co_argcount != 2:
+            raise ValueError('Error: fitness function')
+
+        self.population = np.random.uniform(low=range_gene[0], high=range_gene[1], size=(num_pop, num_gene))
+        self.fitness_func = fitness_func
+        self.fitness = np.empty(num_pop)
+        self.num_parents = num_parents
+        self.num_generation = num_generation
+        self.best_solution = None
+        self.best_fitness = None
+        self.best_index = None
+        self.children_worst_index = None
+        self.children_worst_fitness = None
+        self.children = None
+        self.parents = np.empty(num_parents)
+
+    def __calculate_fitness(self, population, save_arg):
+        save_solution_index = 0
+        save_solution_fitness = 0
+        for idx, solution in enumerate(population):
+            fitness = self.fitness_func(solution)
+            self.fitness[idx] = fitness
+            if save_arg == 'save_best':
+                if fitness > save_solution_fitness:
+                    save_solution_fitness, save_solution_index = fitness, idx
+            elif save_arg == 'save_worst':
+                if fitness < save_solution_fitness:
+                    save_solution_fitness, save_solution_index = fitness, idx
+        if save_arg == 'save_best':
+            self.best_solution = population[save_solution_index]
+        elif save_arg == 'save_worst':
+            self.children_worst_solution = population[save_solution_index]
+
+    def __select_parents(self, population, num_parents, fitness):
+        random_indexes = np.random.uniform(low=0, high=fitness.sum(), size=num_parents)
+        roulette_wheel = np.empty(len(fitness))
+        tmp = 0.0
+        for idx, i in enumerate(fitness):
+            tmp += i
+            roulette_wheel[idx] = tmp
+        for idx, index_prop in enumerate(random_indexes):
+            i = -1
+            while index_prop > 0:
+                i += 1
+                index_prop -= roulette_wheel[i]
+            self.parents[idx] = population[i]
+
+    def __crossover(self):
+        pass
+
+    def __mutate(self):
         pass
 
     def run(self):
+        self.__calculate_fitness(self.population, 'save_best')
+        for _ in self.num_generation:
+            self.__select_parents(self.population, self.num_parents, self.fitness)
+            self.__crossover()
+            self.__mutate()
+            self.__calculate_fitness(self.children, 'save_worst')
+
+            # 精英保留策略
+            if self.children_worst_fitness < self.best_fitness:
+                self.children[self.children_worst_index] = self.population[self.best_index]
+            self.population = self.children
+
         # calculate fitness -> [x, x, x, ...]
         # save the best solution -> [x, x]
         # select parents: roulette_wheel_selection -> [[index, x], [x, x], ...]
@@ -165,7 +237,6 @@ class myGA:
         # mutate: single_point en/decode -> [x, x, x, ...]
         # cal fitness -> [x, x, x, ...]
         # maintain best: replace the worst in children -> back to row 2
-        pass
 
     def display(self):
         pass
