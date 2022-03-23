@@ -150,18 +150,21 @@ fitness_function = fitness_sphere
 
 class myGA:
     def __init__(self):
-        # initial first population
-
+        # initial first population -> np.array[[x,x], [x,x], [x,x], ...]
+        #   num_gene:2 [xx, xx]
+        #   num_pop
+        #   range_init_value
         pass
 
     def run(self):
-        # calculate fitness
-        # get best solution
-        # select parents
-        # crossover
-        # mutate
-        # cal fitness
-        # maintain best
+        # calculate fitness -> [x, x, x, ...]
+        # save the best solution -> [x, x]
+        # select parents: roulette_wheel_selection -> [[index, x], [x, x], ...]
+        #   num_parents
+        # crossover: single_point en/decode -> [bin, x, x, ...]
+        # mutate: single_point en/decode -> [x, x, x, ...]
+        # cal fitness -> [x, x, x, ...]
+        # maintain best: replace the worst in children -> back to row 2
         pass
 
     def display(self):
