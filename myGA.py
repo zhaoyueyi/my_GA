@@ -28,28 +28,46 @@ class MyGA:
                  prob_mutate,
                  precision,
                  num_generation=10):
-        # initial first population -> np.array[[x,x], [x,x], [x,x], ...]
-        #   num_gene:2 [xx, xx]
-        #   num_pop
-        #   range_init_value
-
-        if not callable(fitness_func) or fitness_func.__code__.co_argcount < 1:
-            raise ValueError('Error: fitness function')
-
-        self.population = np.random.uniform(low=range_gene[0], high=range_gene[1], size=(num_pop, num_gene))
+        """
+        initial first population -> np.array[[x,x], [x,x], [x,x], ...]
+        :param num_gene: 2 [xx, xx]
+        :param num_pop:
+        :param range_gene:
+        :param fitness_func:
+        :param num_parents:
+        :param prob_crossover:
+        :param prob_mutate:
+        :param precision:
+        :param num_generation:
+        """
+        self.parents = None
+        self.children_worst_solution = None
+        self.best_solution = None
+        self.range_gene = None
+        self.num_encode = None
+        self.fitness_func = None
         self.fitness = None
-        self.fitness_func = fitness_func
+        self.population = None
+        self.num_pop = num_pop
         self.num_gene = num_gene
         self.num_parents = num_parents
         self.num_generation = num_generation
         self.prob_mutate = prob_mutate
         self.prob_crossover = prob_crossover
         self.precision = precision
-        self.num_encode = int(np.ceil(np.log2(((range_gene[1] - range_gene[0]) / precision))))
+        self.reload_fitness_func(range_gene=range_gene, fitness_func=fitness_func)
+
+    def reload_fitness_func(self, range_gene: Tuple[float, float], fitness_func):
+        if not callable(fitness_func) or fitness_func.__code__.co_argcount < 1:
+            raise ValueError('Error: fitness function')
+        self.population = np.random.uniform(low=range_gene[0], high=range_gene[1], size=(self.num_pop, self.num_gene))
+        self.fitness = None
+        self.fitness_func = fitness_func
+        self.num_encode = int(np.ceil(np.log2(((range_gene[1] - range_gene[0]) / self.precision))))
         self.range_gene = range_gene
         self.best_solution = None
         self.children_worst_solution = self.Solution()
-        self.parents = np.empty((num_parents, 2))
+        self.parents = np.empty((self.num_parents, 2))
 
     def __calculate_fitness(self, population, save_worst=False):
         fitness = []
@@ -62,16 +80,11 @@ class MyGA:
 
     def __select_parents(self, population, num_parents, fitness):
         random_prob = np.random.uniform(low=0, high=fitness.sum(), size=num_parents)
-        roulette_wheel = np.empty(len(fitness))
-        tmp = 0.0
-        for idx, i in enumerate(fitness):
-            tmp += i
-            roulette_wheel[idx] = tmp
         for idx, prob in enumerate(random_prob):
             i = -1
             while prob > 0:
                 i += 1
-                prob -= roulette_wheel[i]
+                prob -= self.fitness[i]
             # TODO: index
             self.parents[idx] = population[i]
 
@@ -121,6 +134,17 @@ class MyGA:
                 self.population[idx] = np.asarray(self.__decoding(result))
 
     def run(self):
+        """
+        # calculate fitness -> [x, x, x, ...]
+        # save the best solution -> [x, x]
+        # select parents: roulette_wheel_selection -> [[index, x], [x, x], ...]
+        #   num_parents
+        # crossover: single_point en/decode -> [bin, x, x, ...]
+        # mutate: single_point en/decode -> [x, x, x, ...]
+        # cal fitness -> [x, x, x, ...]
+        # maintain best: replace the worst in children -> back to row 2
+        :return:
+        """
         self.__calculate_fitness(self.population)
         best_index = np.argmax(self.fitness)
         self.best_solution = self.Solution(best_index,
@@ -140,18 +164,13 @@ class MyGA:
             self.best_solution.fitness = self.fitness[self.best_solution.index]
         print(self.best_solution.fitness)
         print(self.best_solution.solution)
-        # calculate fitness -> [x, x, x, ...]
-        # save the best solution -> [x, x]
-        # select parents: roulette_wheel_selection -> [[index, x], [x, x], ...]
-        #   num_parents
-        # crossover: single_point en/decode -> [bin, x, x, ...]
-        # mutate: single_point en/decode -> [x, x, x, ...]
-        # cal fitness -> [x, x, x, ...]
-        # maintain best: replace the worst in children -> back to row 2
 
     def display(self):
+        """
         # max
         # min
         # avg
         # std
+        :return:
+        """
         pass
