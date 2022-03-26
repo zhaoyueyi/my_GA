@@ -62,22 +62,19 @@ class MyGA:
     def reload_fitness_func(self, range_gene: Tuple[float, float], fitness_func, num_gene, code_type=CodeType.Real_Num):
         if not callable(fitness_func) or fitness_func.__code__.co_argcount < 1:
             raise ValueError('Error: fitness function')
-        try:
-            self.population = np.random.uniform(low=range_gene[0], high=range_gene[1], size=(self.num_pop, num_gene))
-        except:
-            print(range_gene)
-            print(self.num_pop)
-            print(num_gene)
-        self.fitness = None
+        # reload
+        self.num_gene = num_gene
+        self.code_type = code_type
         self.fitness_func = fitness_func
+        self.range_gene = range_gene
+        self.population = np.random.uniform(low=range_gene[0], high=range_gene[1], size=(self.num_pop, num_gene))
         if code_type == CodeType.Binary:
             self.num_encode = int(np.ceil(np.log2(((range_gene[1] - range_gene[0]) / self.precision))))
-        self.range_gene = range_gene
+        # clear
+        self.fitness = None
         self.best_solution = None
         self.children_worst_solution = self.Solution()
         self.parents = np.empty((self.num_parents, num_gene))
-        self.num_gene = num_gene
-        self.code_type = code_type
 
     def __calculate_fitness(self, population, save_worst=False):
         fitness = []
@@ -150,24 +147,6 @@ class MyGA:
                     children.append(pair[1])
         self.population = np.asarray(children)
 
-    # def __crossover(self, parents, num_parents, prob_crossover, num_encode):
-    #     random_prob = np.random.uniform(low=0, high=1, size=int(num_parents / 2))
-    #     random_pos = np.random.randint(low=0, high=num_encode*self.num_gene, size=int(num_parents / 2))
-    #     pair_parents = parents.reshape(-1, 2, self.num_gene).tolist()  # [[[xx, xx], [xx, xx]], [[xx, xx], [xx, xx]], ...]
-    #     children = []
-    #     for idx, pair in enumerate(pair_parents):  # [[xx, xx], [xx, xx]]
-    #         if random_prob[idx] < prob_crossover:
-    #             father = self.__encoding(pair[0])  # 'xxxxxxxxxx'
-    #             mother = self.__encoding(pair[1])
-    #             child = father[: random_pos[idx]] + mother[random_pos[idx]:]
-    #             children.append(self.__decoding(child))  # [xx, xx]
-    #             child = mother[: random_pos[idx]] + father[random_pos[idx]:]
-    #             children.append(self.__decoding(child))
-    #         else:
-    #             children.append(pair[0])
-    #             children.append(pair[1])
-    #     self.population = np.asarray(children)
-
     def __mutate(self, population, prob_mutate, num_encode=None, num_gene=None, range_gene=None, code_type=CodeType.Real_Num):
         if code_type == CodeType.Real_Num:
             random_value = np.random.uniform(low=range_gene[0],
@@ -191,15 +170,6 @@ class MyGA:
                     mutate_pos = '0' if solution[random_pos[idx]] == '1' else '1'
                     result = solution[:random_pos[idx]] + mutate_pos + solution[random_pos[idx]+1:]
                     self.population[idx] = np.asarray(self.__decoding(result))
-    # def __mutate(self, population, prob_mutate, num_encode):
-    #     random_prob = np.random.uniform(low=0, high=1, size=len(population))
-    #     random_pos = np.random.randint(low=0, high=num_encode*self.num_gene, size=len(population))
-    #     for idx, solution in enumerate(population):  # [xx, xx]
-    #         if random_prob[idx] < prob_mutate:
-    #             solution = self.__encoding(solution)
-    #             mutate_pos = '0' if solution[random_pos[idx]] == '1' else '1'
-    #             result = solution[:random_pos[idx]] + mutate_pos + solution[random_pos[idx]+1:]
-    #             self.population[idx] = np.asarray(self.__decoding(result))
 
     def run(self):
         """
@@ -223,8 +193,6 @@ class MyGA:
         avg_fitness = []
         for _ in range(self.num_generation):
             self.__select_parents(self.population, self.num_parents, self.fitness)
-            # self.__crossover(self.parents, self.num_parents, self.prob_crossover, self.num_encode)
-            # self.__mutate(self.population, self.prob_mutate, self.num_encode)
             self.__crossover(self.parents, self.num_parents, self.prob_crossover, self.num_encode, self.num_gene, self.code_type)
             self.__mutate(self.population, self.prob_mutate, self.num_encode, self.num_gene, self.range_gene, self.code_type)
             self.__calculate_fitness(self.population, save_worst=True)
