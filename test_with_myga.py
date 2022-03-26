@@ -8,7 +8,7 @@
 
 # coding:utf-8
 import numpy as np
-import myGA
+from myGA import *
 
 
 def fitness_sphere(solution):  # (-5.12, 5.12)
@@ -52,6 +52,7 @@ def bohachevsky(solution):  # (-1, 1)
     result = 1 / (result + 1)
     return result
 
+
 def HD_sphere(solution):
     result = 0.0
     for x in solution:
@@ -59,19 +60,59 @@ def HD_sphere(solution):
     result = 1 / (result + 1)
     return result
 
-ga_instance = myGA.MyGA(num_gene=2,
-                        num_pop=100,
-                        range_gene=(-5.12, 5.12),
-                        fitness_func=fitness_sphere,
-                        num_parents=40,
-                        prob_crossover=0.7,
-                        prob_mutate=0.1,
-                        precision=0.0001,
-                        num_generation=1000
-                        )
+
+def HD_step(solution):
+    result = 0.0
+    for x in solution:
+        result += (abs(x + 0.5)) ** 2
+    result = 1 / (result + 1)
+    return result
+
+
+def HD_schwefel1(solution):
+    result = 0.0
+    for i in range(len(solution)):
+        tmp_result = 0.0
+        for j in range(i):
+            tmp_result += solution[j] ** 2
+        result += tmp_result ** 2
+    result = 1 / (result + 1)
+    return result
+
+
+def HD_schwefel2(solution):
+    result = 0.0
+    for x in solution:
+        result += abs(x) + x
+    result = 1 / (result + 1)
+    return result
+
+
+def HD_rastrigin(solution):
+    result = 0.0
+    A = 10
+    result += len(solution) * A
+    for x in solution:
+        result += x ** 2 - A * np.cos(2 * np.pi * x)
+    result = 1 / (result + 1)
+    return result
+
+
+ga_instance = MyGA(num_gene=2,
+                   num_pop=100,
+                   range_gene=(-5.12, 5.12),
+                   fitness_func=fitness_sphere,
+                   num_parents=40,
+                   prob_crossover=0.7,
+                   prob_mutate=0.1,
+                   precision=0.0001,
+                   num_generation=1000
+                   )
 
 # ga_instance.reload_fitness_func(range_gene=(-2.0, 2.0),
-#                                 fitness_func=goldstein_price
+#                                 fitness_func=goldstein_price,
+#                                 num_gene=2,
+#                                 code_type=CodeType.Binary
 #                                 )
 #
 # ga_instance.reload_fitness_func(range_gene=(-2.0, 2.0),
@@ -89,6 +130,11 @@ ga_instance = myGA.MyGA(num_gene=2,
 #                                 )
 ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
                                 fitness_func=HD_sphere,
-                                num_gene=100)
+                                num_gene=100,
+                                code_type=CodeType.Real_Num)
+# ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
+#                                 fitness_func=HD_step,
+#                                 num_gene=100,
+#                                 code_type=CodeType.Real_Num)
 ga_instance.run()
-# ga_instance.display()
+
