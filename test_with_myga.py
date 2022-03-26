@@ -52,6 +52,12 @@ def bohachevsky(solution):  # (-1, 1)
     result = 1 / (result + 1)
     return result
 
+def HD_sphere(solution):
+    result = 0.0
+    for x in solution:
+        result += x ** 2
+    result = 1 / (result + 1)
+    return result
 
 ga_instance = myGA.MyGA(num_gene=2,
                         num_pop=100,
@@ -77,8 +83,12 @@ ga_instance = myGA.MyGA(num_gene=2,
 # ga_instance.reload_fitness_func(range_gene=(-5.0, 5.0),
 #                                 fitness_func=six_hump_cameback
 #                                 )
-ga_instance.reload_fitness_func(range_gene=(-1.0, 1.0),
-                                fitness_func=bohachevsky
-                                )
-
+# ga_instance.reload_fitness_func(range_gene=(-1.0, 1.0),
+#                                 fitness_func=bohachevsky,
+#                                 num_gene=2
+#                                 )
+ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
+                                fitness_func=HD_sphere,
+                                num_gene=100)
 ga_instance.run()
+# ga_instance.display()
