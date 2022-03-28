@@ -4,9 +4,11 @@
 # @Software: PyCharm
 # coding:utf-8
 from enum import Enum
-import numpy as np
 from typing import Tuple
+
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 class CodeType(Enum):
     Binary = 0
@@ -191,7 +193,8 @@ class MyGA:
         max_fitness = []
         min_fitness = []
         avg_fitness = []
-        for _ in range(self.num_generation):
+        last_10_gen_fitness = self.fitness[best_index]
+        for i in range(self.num_generation):
             self.__select_parents(self.population, self.num_parents, self.fitness)
             self.__crossover(self.parents, self.num_parents, self.prob_crossover, self.num_encode, self.num_gene, self.code_type)
             self.__mutate(self.population, self.prob_mutate, self.num_encode, self.num_gene, self.range_gene, self.code_type)
@@ -203,9 +206,12 @@ class MyGA:
             self.best_solution.index = np.argmax(self.fitness)
             self.best_solution.solution = self.population[self.best_solution.index]
             self.best_solution.fitness = self.fitness[self.best_solution.index]
-            max_fitness.append(np.max(self.fitness))
+            max_fitness.append(self.best_solution.fitness)
             min_fitness.append(np.min(self.fitness))
             avg_fitness.append(np.average(self.fitness))
+            # if i % 10 == 0:
+            #     if abs(self.best_solution.fitness - last_10_gen_fitness) <= 0.000001: break
+            #     last_10_gen_fitness = self.best_solution.fitness
         self.display(max_fitness, min_fitness, avg_fitness)
         # print(self.best_solution.fitness)
         # print(self.best_solution.solution)
@@ -219,8 +225,9 @@ class MyGA:
         :return:
         """
         plt.figure()
-        plt.plot(data1, label='test')
+        plt.plot(data1)
         plt.plot(data2)
         plt.plot(data3)
         plt.title("Generation vs. Fitness")
+        plt.legend(['Max fitness', 'Min fitness', 'Avg fitness'], loc="lower right")
         plt.show()

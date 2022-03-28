@@ -138,29 +138,29 @@ ga_instance.reload_fitness_func(range_gene=(-1.0, 1.0),
                                 code_type=CodeType.Binary
                                 )
 ga_instance.run()
-ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
-                                fitness_func=HD_sphere,
-                                num_gene=100,
-                                code_type=CodeType.Real_Num)
-ga_instance.run()
-ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
-                                fitness_func=HD_step,
-                                num_gene=100,
-                                code_type=CodeType.Real_Num)
-ga_instance.run()
-ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
-                                fitness_func=HD_schwefel1,
-                                num_gene=100,
-                                code_type=CodeType.Real_Num)
-ga_instance.run()
-ga_instance.reload_fitness_func(range_gene=(-10.0, 10.0),
-                                fitness_func=HD_schwefel2,
-                                num_gene=100,
-                                code_type=CodeType.Real_Num)
-ga_instance.run()
-ga_instance.reload_fitness_func(range_gene=(-5.12, 5.12),
-                                fitness_func=HD_rastrigin,
-                                num_gene=100,
-                                code_type=CodeType.Real_Num)
-ga_instance.run()
+# ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
+#                                 fitness_func=HD_sphere,
+#                                 num_gene=100,
+#                                 code_type=CodeType.Real_Num)
+# ga_instance.run()
+# ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
+#                                 fitness_func=HD_step,
+#                                 num_gene=100,
+#                                 code_type=CodeType.Real_Num)
+# ga_instance.run()
+# ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
+#                                 fitness_func=HD_schwefel1,
+#                                 num_gene=100,
+#                                 code_type=CodeType.Real_Num)
+# ga_instance.run()
+# ga_instance.reload_fitness_func(range_gene=(-10.0, 10.0),
+#                                 fitness_func=HD_schwefel2,
+#                                 num_gene=100,
+#                                 code_type=CodeType.Real_Num)
+# ga_instance.run()
+# ga_instance.reload_fitness_func(range_gene=(-5.12, 5.12),
+#                                 fitness_func=HD_rastrigin,
+#                                 num_gene=100,
+#                                 code_type=CodeType.Real_Num)
+# ga_instance.run()
 
