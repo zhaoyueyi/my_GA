@@ -7,7 +7,6 @@
 # @Software: PyCharm
 
 # coding:utf-8
-import numpy as np
 from myGA import *
 
 
@@ -108,33 +107,60 @@ ga_instance = MyGA(num_gene=2,
                    precision=0.0001,
                    num_generation=1000
                    )
-
-# ga_instance.reload_fitness_func(range_gene=(-2.0, 2.0),
-#                                 fitness_func=goldstein_price,
-#                                 num_gene=2,
-#                                 code_type=CodeType.Binary
-#                                 )
-#
-# ga_instance.reload_fitness_func(range_gene=(-2.0, 2.0),
-#                                 fitness_func=goldstein_price
-#                                 )
-# ga_instance.reload_fitness_func(range_gene=(-6.0, 6.0),
-#                                 fitness_func=himmelbaut
-#                                 )
-# ga_instance.reload_fitness_func(range_gene=(-5.0, 5.0),
-#                                 fitness_func=six_hump_cameback
-#                                 )
-# ga_instance.reload_fitness_func(range_gene=(-1.0, 1.0),
-#                                 fitness_func=bohachevsky,
-#                                 num_gene=2
-#                                 )
+ga_instance.run()
+ga_instance.reload_fitness_func(range_gene=(-2.048, 2.048),
+                                fitness_func=goldstein_price,
+                                num_gene=2,
+                                code_type=CodeType.Binary
+                                )
+ga_instance.run()
+ga_instance.reload_fitness_func(range_gene=(-2.0, 2.0),
+                                fitness_func=dejong,
+                                num_gene=2,
+                                code_type=CodeType.Binary
+                                )
+ga_instance.run()
+ga_instance.reload_fitness_func(range_gene=(-6.0, 6.0),
+                                fitness_func=himmelbaut,
+                                num_gene=2,
+                                code_type=CodeType.Binary
+                                )
+ga_instance.run()
+ga_instance.reload_fitness_func(range_gene=(-5.0, 5.0),
+                                fitness_func=six_hump_cameback,
+                                num_gene=2,
+                                code_type=CodeType.Binary
+                                )
+ga_instance.run()
+ga_instance.reload_fitness_func(range_gene=(-1.0, 1.0),
+                                fitness_func=bohachevsky,
+                                num_gene=2,
+                                code_type=CodeType.Binary
+                                )
+ga_instance.run()
 ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
                                 fitness_func=HD_sphere,
                                 num_gene=100,
                                 code_type=CodeType.Real_Num)
-# ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
-#                                 fitness_func=HD_step,
-#                                 num_gene=100,
-#                                 code_type=CodeType.Real_Num)
+ga_instance.run()
+ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
+                                fitness_func=HD_step,
+                                num_gene=100,
+                                code_type=CodeType.Real_Num)
+ga_instance.run()
+ga_instance.reload_fitness_func(range_gene=(-100.0, 100.0),
+                                fitness_func=HD_schwefel1,
+                                num_gene=100,
+                                code_type=CodeType.Real_Num)
+ga_instance.run()
+ga_instance.reload_fitness_func(range_gene=(-10.0, 10.0),
+                                fitness_func=HD_schwefel2,
+                                num_gene=100,
+                                code_type=CodeType.Real_Num)
+ga_instance.run()
+ga_instance.reload_fitness_func(range_gene=(-5.12, 5.12),
+                                fitness_func=HD_rastrigin,
+                                num_gene=100,
+                                code_type=CodeType.Real_Num)
 ga_instance.run()
 

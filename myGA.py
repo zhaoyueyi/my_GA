@@ -207,8 +207,8 @@ class MyGA:
             min_fitness.append(np.min(self.fitness))
             avg_fitness.append(np.average(self.fitness))
         self.display(max_fitness, min_fitness, avg_fitness)
-        print(self.best_solution.fitness)
-        print(self.best_solution.solution)
+        # print(self.best_solution.fitness)
+        # print(self.best_solution.solution)
 
     def display(self, data1, data2, data3):
         """
@@ -220,7 +220,7 @@ class MyGA:
         """
         plt.figure()
         plt.plot(data1, label='test')
-        # plt.plot(data2)
-        # plt.plot(data3)
+        plt.plot(data2)
+        plt.plot(data3)
         plt.title("Generation vs. Fitness")
         plt.show()
