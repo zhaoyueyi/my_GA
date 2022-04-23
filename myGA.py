@@ -96,7 +96,7 @@ class MyGA:
                 prob -= self.fitness[i]
             # TODO: index
             self.parents[idx] = population[i]
-
+#
     def __encoding(self, solution):  # [xx, xx] -> 'xxxxxx'
         result = ''
         for i in solution:
