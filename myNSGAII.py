@@ -9,13 +9,14 @@
 # coding:utf-8
 import numpy as np
 import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d import Axes3D
 
 class MultiObjProblem:
     def __init__(self,
+                 name: str,
                  obj: int,
                  dim: int,
                  bound: (float, float)):
+        self.name = name
         self.obj = obj
         self.bounds = bound
         self.dim = dim
@@ -23,9 +24,12 @@ class MultiObjProblem:
     def cal_fitness(self, solution):
         pass
 
+    def pareto_front(self, solution):
+        pass
+
 class ZDT(MultiObjProblem):
-    def __init__(self, bounds):
-        MultiObjProblem.__init__(self, 2, 30, bounds)
+    def __init__(self, name, bounds):
+        MultiObjProblem.__init__(self, name, 2, 30, bounds)
 
     def f2(self, g, h):
         return g * h
@@ -45,7 +49,7 @@ class ZDT(MultiObjProblem):
 
 class ZDT1(ZDT):
     def __init__(self):
-        ZDT.__init__(self, (0.0, 1.0))
+        ZDT.__init__(self, 'zdt1', (0.0, 1.0))
 
     def f1(self, x):
         return x[0]
@@ -58,7 +62,7 @@ class ZDT1(ZDT):
 
 class ZDT2(ZDT):
     def __init__(self):
-        ZDT.__init__(self, (0.0, 1.0))
+        ZDT.__init__(self, 'zdt2', (0.0, 1.0))
 
     def f1(self, x):
         return x[0]
@@ -71,7 +75,7 @@ class ZDT2(ZDT):
 
 class ZDT3(ZDT):
     def __init__(self):
-        ZDT.__init__(self, (0.0, 1.0))
+        ZDT.__init__(self, 'zdt3', (0.0, 1.0))
 
     def f1(self, x):
         return x[0]
@@ -83,8 +87,8 @@ class ZDT3(ZDT):
         return 1 - np.sqrt(f1/g) - (f1/g)*np.sin(10*np.pi*f1)
 
 class DTLZ(MultiObjProblem):
-    def __init__(self, dim, bounds):
-        super().__init__(3, dim, bounds)
+    def __init__(self, name, dim, bounds):
+        super().__init__(name, 3, dim, bounds)
 
     def X_M(self, x):
         M = self.obj
@@ -94,12 +98,21 @@ class DTLZ(MultiObjProblem):
     def f(self, x): pass
 
     def cal_fitness(self, solution):
-        result = self.f(solution)
-        return result
+        return self.f(solution)
+
+    def pareto_front(self, solution):
+        M = self.obj
+        x = []
+        for i in range(self.dim):
+            if i < M-1:
+                x.append(solution[i])
+            else:
+                x.append(0.5)
+        return self.f(x)
 
 class DTLZ1(DTLZ):
     def __init__(self):
-        super().__init__(7, (0.0, 1.0))
+        super().__init__('dtlz1', 7, (0.0, 1.0))
         self.k = self.dim - self.obj + 1
 
     def g(self, X_M):
@@ -127,7 +140,7 @@ class DTLZ1(DTLZ):
 
 class DTLZ4(DTLZ):
     def __init__(self):
-        super().__init__(10, (0.0, 1.0))
+        super().__init__('dtlz4', 10, (0.0, 1.0))
         self.alpha = 100
 
     def g(self, X_M):
@@ -149,7 +162,7 @@ class DTLZ4(DTLZ):
 
 class DTLZ5(DTLZ):
     def __init__(self):
-        super().__init__(10, (0.0, 1.0))
+        super().__init__('dtlz5', 10, (0.0, 1.0))
 
     def g(self, X_M):
         return np.sum((X_M - .5)**2)
@@ -187,17 +200,21 @@ class MyNSGAII:
         self.pop_fitness = None
         self.pop_parents = None
         self.pop_fronts = None
+        self.pop_igd = []
         self.problem = None
         self.pro_bounds = None
         self.pro_dim = None
         self.pro_obj = None
+        self.pro_pof = None
 
     def load_problem(self, problem: MultiObjProblem):
         self.__init__(self.max_gen, self.pop_size, self.eta_crossover, self.eta_mutate)
         self.problem = problem
+        self.pro_name = problem.name
         self.pro_obj = problem.obj
         self.pro_dim = problem.dim
         self.pro_bounds = problem.bounds
+        self.pro_pof = np.loadtxt('pof/'+self.pro_name+'.csv', delimiter=',')
 
     def _init_pop(self, size, dim, bounds):
         self.population = np.random.uniform(bounds[0], bounds[1], (size, dim))
@@ -283,40 +300,6 @@ class MyNSGAII:
                 parents.append(self.population[l])
         self.pop_parents = np.asarray(parents)
 
-    def _crossover_mutate_backup(self):
-        children = []
-        eta_cro = self.eta_crossover
-        eta_mut = self.eta_mutate
-        index_r = int(self.pop_size / 2)
-        rand_cro = np.random.uniform(low=0, high=1, size=index_r)
-        rand_mut = np.random.uniform(low=0, high=1, size=self.pop_size)
-
-        for index, i in enumerate(rand_cro):
-            l = self.pop_parents[index]
-            r = self.pop_parents[index + index_r]
-            if i <= 0.5:
-                beta = (i * 2) ** (1 / (1 + eta_cro))
-            else:
-                beta = (1 / (2 - i * 2)) ** (1 / (1 + eta_cro))
-            child_l = 0.5 * ((1 + beta) * l + (1 - beta) * r)
-            child_r = 0.5 * ((1 - beta) * l + (1 + beta) * r)
-            if rand_mut[index] < 0.5:
-                delta = (2 * rand_mut[index]) ** (1/(eta_mut+1)) -1
-            else:
-                delta = 1-(2*(1-rand_mut[index])) ** (1/(eta_mut+1))
-            child_l = child_l + delta
-            child_l = np.clip(child_l, self.pro_bounds[0], self.pro_bounds[1])
-            if rand_mut[index+index_r] < 0.5:
-                delta = (2 * rand_mut[index+index_r]) ** (1/(eta_mut+1))-1
-            else:
-                delta = 1-(2*(1-rand_mut[index+index_r])) ** (1/(eta_mut+1))
-            child_r = child_r + delta
-            child_r = np.clip(child_r, self.pro_bounds[0], self.pro_bounds[1])
-            children.append(child_l)
-            children.append(child_r)
-        children = np.asarray(children)
-        self.population = np.vstack((self.population, children))
-
     def _crossover_mutate(self):
         children = []
         eta_cro = self.eta_crossover
@@ -346,6 +329,17 @@ class MyNSGAII:
             children.append(child_r)
         children = np.asarray(children)
         self.population = np.vstack((self.population, children))
+
+    def _compute_igd(self):
+        igd = []
+        data = self.pop_fitness[self.pop_fronts[0]]
+        for p in data:
+            pof = self.pro_pof
+            pof = np.abs(pof - p)
+            pof = pof.sum(1)
+            igd.append(min(pof))
+        igd = np.mean(igd)
+        self.pop_igd.append(igd)
 
     def _select_elitism(self):
         population = np.empty((0, self.pro_dim))
@@ -378,12 +372,14 @@ class MyNSGAII:
             self._compute_rank(self.population)
             # crowding-distance
             self._compute_crowd(self.pop_fronts)
+            self._compute_igd()
             # elitism select
             if gen != self.max_gen-1:
                 self._select_elitism()
             # terminate
+        plt.boxplot(self.pop_igd)
+        plt.show()
         display_data = self.pop_fitness[self.pop_fronts[0]]
-        print(display_data)
         if self.pro_obj == 2:
             plt.scatter(display_data[:,0], display_data[:,1])
             plt.show()
@@ -392,3 +388,4 @@ class MyNSGAII:
             ax = fig.add_subplot(projection='3d')
             ax.scatter(display_data[:, 0], display_data[:, 1], display_data[:, 2])
             plt.show()
+
