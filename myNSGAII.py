@@ -10,7 +10,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class MultiObjProblem:
     def __init__(self,
                  num_obj: int,
@@ -19,17 +18,33 @@ class MultiObjProblem:
         self.num_obj = num_obj
         self.bounds = bound
         self.dim = dim
-        self.func_list = []
-
-    def f1(self, x):
-        pass
 
     def cal_fitness(self, solution):
         pass
 
-class ZDT1(MultiObjProblem):
+class ZDT(MultiObjProblem):
+    def __init__(self, bounds):
+        MultiObjProblem.__init__(self, 2, 30, bounds)
+
+    def f2(self, g, h):
+        return g * h
+
+    def f1(self, x): pass
+
+    def g(self, x): pass
+
+    def h(self, f1, g): pass
+
+    def cal_fitness(self, solution):
+        f1 = self.f1(solution)
+        g = self.g(solution)
+        h = self.h(f1, g)
+        f2 = self.f2(g, h)
+        return [f1, f2]
+
+class ZDT1(ZDT):
     def __init__(self):
-        MultiObjProblem.__init__(self, 2, 30, (0.0, 1.0))
+        ZDT.__init__(self, (0.0, 1.0))
 
     def f1(self, x):
         return x[0]
@@ -40,31 +55,31 @@ class ZDT1(MultiObjProblem):
     def h(self, f1, g):
         return 1 - np.sqrt(f1/g)
 
-    def cal_fitness(self, solution):
-        f1 = self.f1(solution)
-        g = self.g(solution)
-        f2 = g*self.h(f1, g)
-        return [f1, f2]
-
-
-class TestProblem(MultiObjProblem):
-    obj = 2
-    bounds = (-55, 55)
-    dim = 30
-
+class ZDT2(ZDT):
     def __init__(self):
-        MultiObjProblem.__init__(self, self.obj, self.dim, self.bounds)
-        self.func_list = [self.f1, self.f2]
+        ZDT.__init__(self, (0.0, 1.0))
 
     def f1(self, x):
-        return -x ** 2
+        return x[0]
 
-    def f2(self, x):
-        return -(x - 2) ** 2
+    def g(self, x):
+        return 1 + (9/29) * np.sum(x[1:])
 
-    def cal_fitness(self, solution):
-        return [self.f1(solution), self.f2(solution)]
+    def h(self, f1, g):
+        return 1 - (f1/g)**2
 
+class ZDT3(ZDT):
+    def __init__(self):
+        ZDT.__init__(self, (0.0, 1.0))
+
+    def f1(self, x):
+        return x[0]
+
+    def g(self, x):
+        return 1 + (9/29) * np.sum(x[1:])
+
+    def h(self, f1, g):
+        return 1 - np.sqrt(f1/g) - (f1/g)*np.sin(10*np.pi*f1)
 
 class MyNSGAII:
     def __init__(self,
@@ -279,6 +294,4 @@ class MyNSGAII:
             # terminate
         display_data = self.pop_fitness[self.pop_fronts[0]]
         plt.scatter(display_data[:,0], display_data[:,1])
-        plt.xlim(self.pro_bounds)
-        plt.ylim(self.pro_bounds)
         plt.show()
