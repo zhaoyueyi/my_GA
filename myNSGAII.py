@@ -9,13 +9,14 @@
 # coding:utf-8
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 class MultiObjProblem:
     def __init__(self,
-                 num_obj: int,
+                 obj: int,
                  dim: int,
                  bound: (float, float)):
-        self.num_obj = num_obj
+        self.obj = obj
         self.bounds = bound
         self.dim = dim
 
@@ -81,6 +82,44 @@ class ZDT3(ZDT):
     def h(self, f1, g):
         return 1 - np.sqrt(f1/g) - (f1/g)*np.sin(10*np.pi*f1)
 
+class DTLZ1(MultiObjProblem):
+    def __init__(self):
+        super().__init__(3, 7, (0.0, 1.0))
+        self.k = self.dim - self.obj + 1
+
+    def X_M(self, x):
+        M = self.obj
+        X_M = x[M - 1:]
+        return X_M
+
+    def g(self, X_M):
+        k = self.k
+        return 100 * (k + np.sum((X_M - 0.5)**2 - np.cos(20 * np.pi * (X_M - 0.5))))
+
+    def f(self, x):
+        f = []
+        M = self.obj
+        X_M = self.X_M(x)
+        g = self.g(X_M)
+        s1 = 0.5 * (1 + g)
+
+        f1 = s1 * x[0] * x[1]
+        f2 = s1 * x[0] * (1 - x[1])
+        f3 = s1 * (1 - x[0])
+
+        # for i in range(self.obj):
+        #     f1 = s1 * np.prod(x[:M-1-i])
+        #     if i > 0: f1 *= (1 - x[M-i])
+        #     # if i != M-1: f1 *= np.prod(x[:M-1-i])
+        #     f.append(f1)
+        # return f
+        return [f1, f2, f3]
+
+    def cal_fitness(self, solution):
+        result = self.f(solution)
+        # print('{}-{}'.format(solution, result))
+        return result
+
 class MyNSGAII:
     def __init__(self,
                  max_gen: int,
@@ -105,7 +144,7 @@ class MyNSGAII:
     def load_problem(self, problem: MultiObjProblem):
         self.__init__(self.max_gen, self.pop_size, self.eta_crossover, self.eta_mutate)
         self.problem = problem
-        self.pro_obj = problem.num_obj
+        self.pro_obj = problem.obj
         self.pro_dim = problem.dim
         self.pro_bounds = problem.bounds
 
@@ -293,5 +332,11 @@ class MyNSGAII:
                 self._select_elitism()
             # terminate
         display_data = self.pop_fitness[self.pop_fronts[0]]
-        plt.scatter(display_data[:,0], display_data[:,1])
-        plt.show()
+        if self.pro_obj == 2:
+            plt.scatter(display_data[:,0], display_data[:,1])
+            plt.show()
+        elif self.pro_obj == 3:
+            fig = plt.figure()
+            ax = Axes3D(fig)
+            ax.scatter(display_data[:, 0], display_data[:, 1], display_data[:, 2])
+            plt.show()
