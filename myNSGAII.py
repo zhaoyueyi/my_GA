@@ -88,6 +88,7 @@ class MyNSGAII:
         self.pro_obj = None
 
     def load_problem(self, problem: MultiObjProblem):
+        self.__init__(self.max_gen, self.pop_size, self.eta_crossover, self.eta_mutate)
         self.problem = problem
         self.pro_obj = problem.num_obj
         self.pro_dim = problem.dim
@@ -273,10 +274,11 @@ class MyNSGAII:
             # crowding-distance
             self._compute_crowd(self.pop_fronts)
             # elitism select
-            self._select_elitism()
+            if gen != self.max_gen-1:
+                self._select_elitism()
             # terminate
-        print(self.pop_fitness)
-        plt.scatter(self.pop_fitness[:,0], self.pop_fitness[:,1])
-        ax = plt.gca()
-        ax.set_aspect(1)
+        display_data = self.pop_fitness[self.pop_fronts[0]]
+        plt.scatter(display_data[:,0], display_data[:,1])
+        plt.xlim(self.pro_bounds)
+        plt.ylim(self.pro_bounds)
         plt.show()

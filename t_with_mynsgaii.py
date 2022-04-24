@@ -9,7 +9,7 @@
 # coding:utf-8
 from myNSGAII import ZDT1, MyNSGAII
 
-ga = MyNSGAII(500, 200, 20, 20)
+ga = MyNSGAII(100, 50, 20, 20)
 prob = ZDT1()
 ga.load_problem(prob)
 ga.run()
