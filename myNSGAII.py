@@ -82,15 +82,25 @@ class ZDT3(ZDT):
     def h(self, f1, g):
         return 1 - np.sqrt(f1/g) - (f1/g)*np.sin(10*np.pi*f1)
 
-class DTLZ1(MultiObjProblem):
-    def __init__(self):
-        super().__init__(3, 7, (0.0, 1.0))
-        self.k = self.dim - self.obj + 1
+class DTLZ(MultiObjProblem):
+    def __init__(self, dim, bounds):
+        super().__init__(3, dim, bounds)
 
     def X_M(self, x):
         M = self.obj
         X_M = x[M - 1:]
         return X_M
+
+    def f(self, x): pass
+
+    def cal_fitness(self, solution):
+        result = self.f(solution)
+        return result
+
+class DTLZ1(DTLZ):
+    def __init__(self):
+        super().__init__(7, (0.0, 1.0))
+        self.k = self.dim - self.obj + 1
 
     def g(self, X_M):
         k = self.k
@@ -107,7 +117,7 @@ class DTLZ1(MultiObjProblem):
         # f2 = s1 * x[0] * (1 - x[1])
         # f3 = s1 * (1 - x[0])
 
-        for i in range(self.obj):  # 3:[0 1 2] m=3
+        for i in range(M):  # 3:[0 1 2] m=3
             f1 = s1
             if i > 0: f1 *= (1 - x[M-1-i])
             if i < M-1: f1 *= np.prod(x[:M-1-i])
@@ -115,10 +125,51 @@ class DTLZ1(MultiObjProblem):
         return f
         # return [f1, f2, f3]
 
-    def cal_fitness(self, solution):
-        result = self.f(solution)
-        # print('{}-{}'.format(solution, result))
-        return result
+class DTLZ4(DTLZ):
+    def __init__(self):
+        super().__init__(10, (0.0, 1.0))
+        self.alpha = 100
+
+    def g(self, X_M):
+        return np.sum((X_M - .5) ** 2)
+
+    def f(self, x):
+        f = []
+        X_M = self.X_M(x)
+        g = self.g(X_M)
+        alpha = self.alpha
+        M = self.obj
+
+        for i in range(M):
+            f1 = (1 + g)
+            if i > 0: f1 *= np.sin(x[M - 2] ** alpha * np.pi / 2)
+            if i < M - 1: f1 *= np.prod(np.cos(x[:M - 2] ** alpha * np.pi / 2))
+            f.append(f1)
+        return f
+
+class DTLZ5(DTLZ):
+    def __init__(self):
+        super().__init__(10, (0.0, 1.0))
+
+    def g(self, X_M):
+        return np.sum((X_M - .5)**2)
+
+    def theta(self, x, g):
+        return (np.pi/(4*(1 + g))) * (1 + 2*g*x)
+
+    def f(self, x):
+        f = []
+        X_M = self.X_M(x)
+        g = self.g(X_M)
+        theta = self.theta(x, g)
+        M = self.obj
+
+        for i in range(M):
+            f1 = (1+g)
+            if i > 0: f1 *= np.sin(theta[M-2]*np.pi/2)
+            if i < M-1: f1 *= np.prod(np.cos(theta[:M-2]*np.pi/2))
+            f.append(f1)
+        return f
 
 class MyNSGAII:
     def __init__(self,
@@ -340,7 +391,4 @@ class MyNSGAII:
             fig = plt.figure()
             ax = fig.add_subplot(projection='3d')
             ax.scatter(display_data[:, 0], display_data[:, 1], display_data[:, 2])
-            ax.set_xlim(0, 10)
-            ax.set_ylim(10, 0)
-            ax.set_zlim(0, 10)
             plt.show()
