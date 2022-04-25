@@ -155,8 +155,8 @@ class DTLZ4(DTLZ):
 
         for i in range(M):
             f1 = (1 + g)
-            if i > 0: f1 *= np.sin(x[M - 2] ** alpha * np.pi / 2)
-            if i < M - 1: f1 *= np.prod(np.cos(x[:M - 2] ** alpha * np.pi / 2))
+            if i > 0: f1 *= np.sin(x[M-1-i] ** alpha * np.pi / 2)
+            if i < M - 1: f1 *= np.prod(np.cos(x[:M-1-i] ** alpha * np.pi / 2))
             f.append(f1)
         return f
 
@@ -177,10 +177,14 @@ class DTLZ5(DTLZ):
         theta = self.theta(x, g)
         M = self.obj
 
+        # f0 = (1+g) * np.prod(np.cos(theta[:M-1]*np.pi/2))
+        # f1 = (1+g) * np.prod(np.cos(theta[:M-2]*np.pi/2)) * np.sin(theta[M-2]*np.pi/2)
+        # f2 = (1+g) *                                        np.sin(theta[M-3]*np.pi/2)
+
         for i in range(M):
             f1 = (1+g)
-            if i > 0: f1 *= np.sin(theta[M-2]*np.pi/2)
-            if i < M-1: f1 *= np.prod(np.cos(theta[:M-2]*np.pi/2))
+            if i > 0:   f1 *= np.sin(theta[M-1-i]*np.pi/2)
+            if i < M-1: f1 *= np.prod(np.cos(theta[:M-1-i]*np.pi/2))
             f.append(f1)
         return f
 
