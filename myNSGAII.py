@@ -168,7 +168,9 @@ class DTLZ5(DTLZ):
         return np.sum((X_M - .5)**2)
 
     def theta(self, x, g):
-        return (np.pi/(4*(1 + g))) * (1 + 2*g*x)
+        theta = (np.pi/(4*(1 + g))) * (1 + 2*g*x)
+        theta[0] = x[0]
+        return theta
 
     def f(self, x):
         f = []
@@ -177,16 +179,17 @@ class DTLZ5(DTLZ):
         theta = self.theta(x, g)
         M = self.obj
 
-        # f0 = (1+g) * np.prod(np.cos(theta[:M-1]*np.pi/2))
-        # f1 = (1+g) * np.prod(np.cos(theta[:M-2]*np.pi/2)) * np.sin(theta[M-2]*np.pi/2)
-        # f2 = (1+g) *                                        np.sin(theta[M-3]*np.pi/2)
+        f0 = (1+g) * np.cos(theta[0]*np.pi/2) * np.cos(theta[1]*np.pi/2)
+        f1 = (1+g) * np.cos(theta[0]*np.pi/2) * np.sin(theta[1]*np.pi/2)
+        f2 = (1+g) * np.sin(theta[0]*np.pi/2)
 
-        for i in range(M):
-            f1 = (1+g)
-            if i > 0:   f1 *= np.sin(theta[M-1-i]*np.pi/2)
-            if i < M-1: f1 *= np.prod(np.cos(theta[:M-1-i]*np.pi/2))
-            f.append(f1)
-        return f
+        # for i in range(M):
+        #     f1 = (1+g)
+        #     if i > 0:   f1 *= np.sin(theta[M-1-i]*np.pi/2)
+        #     if i < M-1: f1 *= np.prod(np.cos(theta[:M-1-i]*np.pi/2))
+        #     f.append(f1)
+        # return f
+        return [f0, f1, f2]
 
 class MyNSGAII:
     def __init__(self,
@@ -381,7 +384,7 @@ class MyNSGAII:
             if gen != self.max_gen-1:
                 self._select_elitism()
             # terminate
-        plt.boxplot(self.pop_igd)
+        plt.boxplot(self.pop_igd, showfliers=False)
         plt.show()
         display_data = self.pop_fitness[self.pop_fronts[0]]
         if self.pro_obj == 2:
