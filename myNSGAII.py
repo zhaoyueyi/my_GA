@@ -9,6 +9,8 @@
 # coding:utf-8
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.spatial as sp
+
 
 class MultiObjProblem:
     def __init__(self,
@@ -26,6 +28,7 @@ class MultiObjProblem:
 
     def pareto_front(self, solution):
         pass
+
 
 class ZDT(MultiObjProblem):
     def __init__(self, name, bounds):
@@ -47,6 +50,7 @@ class ZDT(MultiObjProblem):
         f2 = self.f2(g, h)
         return [f1, f2]
 
+
 class ZDT1(ZDT):
     def __init__(self):
         ZDT.__init__(self, 'zdt1', (0.0, 1.0))
@@ -55,10 +59,11 @@ class ZDT1(ZDT):
         return x[0]
 
     def g(self, x):
-        return 1 + (9/29) * np.sum(x[1:])
+        return 1 + (9 / 29) * np.sum(x[1:])
 
     def h(self, f1, g):
-        return 1 - np.sqrt(f1/g)
+        return 1 - np.sqrt(f1 / g)
+
 
 class ZDT2(ZDT):
     def __init__(self):
@@ -68,10 +73,11 @@ class ZDT2(ZDT):
         return x[0]
 
     def g(self, x):
-        return 1 + (9/29) * np.sum(x[1:])
+        return 1 + (9 / 29) * np.sum(x[1:])
 
     def h(self, f1, g):
-        return 1 - (f1/g)**2
+        return 1 - (f1 / g) ** 2
+
 
 class ZDT3(ZDT):
     def __init__(self):
@@ -81,10 +87,11 @@ class ZDT3(ZDT):
         return x[0]
 
     def g(self, x):
-        return 1 + (9/29) * np.sum(x[1:])
+        return 1 + (9 / 29) * np.sum(x[1:])
 
     def h(self, f1, g):
-        return 1 - np.sqrt(f1/g) - (f1/g)*np.sin(10*np.pi*f1)
+        return 1 - np.sqrt(f1 / g) - (f1 / g) * np.sin(10 * np.pi * f1)
+
 
 class DTLZ(MultiObjProblem):
     def __init__(self, name, dim, bounds):
@@ -95,7 +102,8 @@ class DTLZ(MultiObjProblem):
         X_M = x[M - 1:]
         return X_M
 
-    def f(self, x): pass
+    def f(self, x):
+        pass
 
     def cal_fitness(self, solution):
         return self.f(solution)
@@ -104,11 +112,12 @@ class DTLZ(MultiObjProblem):
         M = self.obj
         x = []
         for i in range(self.dim):
-            if i < M-1:
+            if i < M - 1:
                 x.append(solution[i])
             else:
                 x.append(0.5)
         return self.f(x)
+
 
 class DTLZ1(DTLZ):
     def __init__(self):
@@ -117,7 +126,7 @@ class DTLZ1(DTLZ):
 
     def g(self, X_M):
         k = self.k
-        return 100 * (k + np.sum((X_M - 0.5)**2 - np.cos(20 * np.pi * (X_M - 0.5))))
+        return 100 * (k + np.sum((X_M - 0.5) ** 2 - np.cos(20 * np.pi * (X_M - 0.5))))
 
     def f(self, x):
         f = []
@@ -132,11 +141,12 @@ class DTLZ1(DTLZ):
 
         for i in range(M):  # 3:[0 1 2] m=3
             f1 = s1
-            if i > 0: f1 *= (1 - x[M-1-i])
-            if i < M-1: f1 *= np.prod(x[:M-1-i])
+            if i > 0: f1 *= (1 - x[M - 1 - i])
+            if i < M - 1: f1 *= np.prod(x[:M - 1 - i])
             f.append(f1)
         return f
         # return [f1, f2, f3]
+
 
 class DTLZ4(DTLZ):
     def __init__(self):
@@ -155,20 +165,21 @@ class DTLZ4(DTLZ):
 
         for i in range(M):
             f1 = (1 + g)
-            if i > 0: f1 *= np.sin(x[M-1-i] ** alpha * np.pi / 2)
-            if i < M - 1: f1 *= np.prod(np.cos(x[:M-1-i] ** alpha * np.pi / 2))
+            if i > 0: f1 *= np.sin(x[M - 1 - i] ** alpha * np.pi / 2)
+            if i < M - 1: f1 *= np.prod(np.cos(x[:M - 1 - i] ** alpha * np.pi / 2))
             f.append(f1)
         return f
+
 
 class DTLZ5(DTLZ):
     def __init__(self):
         super().__init__('dtlz5', 10, (0.0, 1.0))
 
     def g(self, X_M):
-        return np.sum((X_M - .5)**2)
+        return np.sum((X_M - .5) ** 2)
 
     def theta(self, x, g):
-        theta = (np.pi/(4*(1 + g))) * (1 + 2*g*x)
+        theta = (np.pi / (4 * (1 + g))) * (1 + 2 * g * x)
         theta[0] = x[0]
         return theta
 
@@ -179,9 +190,9 @@ class DTLZ5(DTLZ):
         theta = self.theta(x, g)
         M = self.obj
 
-        f0 = (1+g) * np.cos(theta[0]*np.pi/2) * np.cos(theta[1]*np.pi/2)
-        f1 = (1+g) * np.cos(theta[0]*np.pi/2) * np.sin(theta[1]*np.pi/2)
-        f2 = (1+g) * np.sin(theta[0]*np.pi/2)
+        f0 = (1 + g) * np.cos(theta[0] * np.pi / 2) * np.cos(theta[1] * np.pi / 2)
+        f1 = (1 + g) * np.cos(theta[0] * np.pi / 2) * np.sin(theta[1] * np.pi / 2)
+        f2 = (1 + g) * np.sin(theta[0] * np.pi / 2)
 
         # for i in range(M):
         #     f1 = (1+g)
@@ -190,6 +201,7 @@ class DTLZ5(DTLZ):
         #     f.append(f1)
         # return f
         return [f0, f1, f2]
+
 
 class MyNSGAII:
     def __init__(self,
@@ -221,7 +233,7 @@ class MyNSGAII:
         self.pro_obj = problem.obj
         self.pro_dim = problem.dim
         self.pro_bounds = problem.bounds
-        self.pro_pof = np.loadtxt('pof/'+self.pro_name+'.csv', delimiter=',')
+        self.pro_pof = np.loadtxt('pof/' + self.pro_name + '.csv', delimiter=',')
 
     def _init_pop(self, size, dim, bounds):
         self.population = np.random.uniform(bounds[0], bounds[1], (size, dim))
@@ -277,17 +289,28 @@ class MyNSGAII:
     def _compute_crowd(self, fronts):
         list_crowd = [-1] * len(self.population)
         for front in fronts:
+            if len(front) == 0: break
             col_fitness = self.pop_fitness[front]
-            table = np.column_stack((front, col_fitness))
-            index_fitness_table = table[np.argsort(table[:, 1])]
+            tree = sp.cKDTree(col_fitness)
             for i in range(len(front)):
-                if i == 0 or i == len(index_fitness_table) - 1:
-                    list_crowd[int(index_fitness_table[i][0])] = np.Inf
-                else:
-                    crowd = 0
-                    for j in range(self.pro_obj):
-                        crowd += abs(index_fitness_table[i + 1][j + 1] - index_fitness_table[i - 1][j + 1])
-                    list_crowd[int(index_fitness_table[i][0])] = crowd
+                dis, front_index = tree.query(col_fitness[i], k=3)
+                list_crowd[front[i]] = dis[1] + dis[2]
+            for i in range(self.pro_obj):
+                list_crowd[front[np.argmax(col_fitness[:, i])]] = np.Inf
+                list_crowd[front[np.argmin(col_fitness[:, i])]] = np.Inf
+            # table = np.column_stack((front, col_fitness))
+            # index_fitness_table = table[np.argsort(table[:, 1:], axis=0, kind='mergesort'), :]
+            # table = col_fitness
+            # index_fitness_table = table[np.argsort(table, axis=0, kind='mergesort'), :]
+            # print(index_fitness_table.shape)
+            # for i in range(len(front)):
+            #     if i == 0 or i == len(index_fitness_table) - 1:
+            #         list_crowd[int(index_fitness_table[i][0])] = np.Inf
+            #     else:
+            #         crowd = 0
+            #         for j in range(self.pro_obj):
+            #             crowd += abs(index_fitness_table[i + 1][j + 1] - index_fitness_table[i - 1][j + 1])
+            #         list_crowd[int(index_fitness_table[i][0])] = crowd
         self.pop_crowd = np.asarray(list_crowd)
 
     def _select_parent(self):
@@ -307,33 +330,46 @@ class MyNSGAII:
                 parents.append(self.population[l])
         self.pop_parents = np.asarray(parents)
 
-    def _crossover_mutate(self):
+    def _crossover_mutate(self, probability_crossover, probability_mutate):
         children = []
+        prob_cro = probability_crossover
+        prob_mut = probability_mutate
         eta_cro = self.eta_crossover
         eta_mut = self.eta_mutate
         index_r = int(self.pop_size / 2)
+        rand_prob_cro = np.random.uniform(low=0, high=1, size=index_r)
+        rand_prob_mut = np.random.uniform(low=0, high=1, size=self.pop_size)
         rand_cro = np.random.uniform(low=0, high=1, size=(index_r, self.pro_dim))
         rand_mut = np.random.uniform(low=0, high=1, size=(self.pop_size, self.pro_dim))
         prop_cro = 1 / (1 + eta_cro)
-        prop_mut = 1/(eta_mut+1)
+        prop_mut = 1 / (eta_mut + 1)
         for index, i in enumerate(rand_cro):
-            l = self.pop_parents[index]
-            r = self.pop_parents[index + index_r]
-            for j in range(self.pro_dim):
-                if i[j] <= 0.5: i[j] = (i[j] * 2) ** prop_cro
-                else:           i[j] = (1 / (2 - i[j] * 2)) ** prop_cro
-                if rand_mut[index][j] < 0.5: rand_mut[index][j] = (2 * rand_mut[index][j]) ** prop_mut - 1
-                else:                        rand_mut[index][j] = 1-(2*(1-rand_mut[index][j])) ** prop_mut
-                if rand_mut[index + index_r][j] < 0.5: rand_mut[index + index_r][j] = (2 * rand_mut[index + index_r][j]) ** prop_mut - 1
-                else:                        rand_mut[index + index_r][j] = 1-(2*(1-rand_mut[index + index_r][j])) ** prop_mut
-            child_l = 0.5 * ((1 + i) * l + (1 - i) * r)
-            child_r = 0.5 * ((1 - i) * l + (1 + i) * r)
-            child_l = child_l + rand_mut[index]
-            child_l = np.clip(child_l, self.pro_bounds[0], self.pro_bounds[1])
-            child_r = child_r + rand_mut[index + index_r]
-            child_r = np.clip(child_r, self.pro_bounds[0], self.pro_bounds[1])
-            children.append(child_l)
-            children.append(child_r)
+            if rand_prob_cro[index] < prob_cro:
+                l = self.pop_parents[index]
+                r = self.pop_parents[index + index_r]
+                for j in range(self.pro_dim):
+                    if i[j] <= 0.5:
+                        i[j] = (i[j] * 2) ** prop_cro
+                    else:
+                        i[j] = (1 / (2 - i[j] * 2)) ** prop_cro
+                    if rand_mut[index][j] < 0.5:
+                        rand_mut[index][j] = (2 * rand_mut[index][j]) ** prop_mut - 1
+                    else:
+                        rand_mut[index][j] = 1 - (2 * (1 - rand_mut[index][j])) ** prop_mut
+                    if rand_mut[index + index_r][j] < 0.5:
+                        rand_mut[index + index_r][j] = (2 * rand_mut[index + index_r][j]) ** prop_mut - 1
+                    else:
+                        rand_mut[index + index_r][j] = 1 - (2 * (1 - rand_mut[index + index_r][j])) ** prop_mut
+                child_l = 0.5 * ((1 + i) * l + (1 - i) * r)
+                child_r = 0.5 * ((1 - i) * l + (1 + i) * r)
+                if rand_prob_mut[index] < prob_mut:
+                    child_l = child_l + rand_mut[index]
+                child_l = np.clip(child_l, self.pro_bounds[0], self.pro_bounds[1])
+                if rand_prob_mut[index + index_r] < prob_mut:
+                    child_r = child_r + rand_mut[index + index_r]
+                child_r = np.clip(child_r, self.pro_bounds[0], self.pro_bounds[1])
+                children.append(child_l)
+                children.append(child_r)
         children = np.asarray(children)
         self.population = np.vstack((self.population, children))
 
@@ -373,7 +409,7 @@ class MyNSGAII:
             # parent-select: 二元锦标赛
             self._select_parent()
             # crossover-mutate
-            self._crossover_mutate()
+            self._crossover_mutate(0.9, 0.1)
             # rank & distance
             self._compute_fitness(self.population)
             self._compute_rank(self.population)
@@ -381,18 +417,17 @@ class MyNSGAII:
             self._compute_crowd(self.pop_fronts)
             self._compute_igd()
             # elitism select
-            if gen != self.max_gen-1:
+            if gen != self.max_gen - 1:
                 self._select_elitism()
             # terminate
         plt.boxplot(self.pop_igd, showfliers=False)
         plt.show()
         display_data = self.pop_fitness[self.pop_fronts[0]]
         if self.pro_obj == 2:
-            plt.scatter(display_data[:,0], display_data[:,1])
+            plt.scatter(display_data[:, 0], display_data[:, 1])
             plt.show()
         elif self.pro_obj == 3:
             fig = plt.figure()
             ax = fig.add_subplot(projection='3d')
             ax.scatter(display_data[:, 0], display_data[:, 1], display_data[:, 2])
             plt.show()
-
