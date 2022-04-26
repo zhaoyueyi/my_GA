@@ -121,12 +121,11 @@ class DTLZ(MultiObjProblem):
 
 class DTLZ1(DTLZ):
     def __init__(self):
-        super().__init__('dtlz1', 7, (0.0, 1.0))
-        self.k = self.dim - self.obj + 1
+        super().__init__('dtlz1', 3, (0.0, 1.0))
 
     def g(self, X_M):
-        k = self.k
-        return 100 * (k + np.sum((X_M - 0.5) ** 2 - np.cos(20 * np.pi * (X_M - 0.5))))
+        k = self.dim - self.obj + 1
+        return 100 * (k + np.sum(np.square(X_M - 0.5) - np.cos(20 * np.pi * (X_M - 0.5))))
 
     def f(self, x):
         f = []
@@ -134,27 +133,21 @@ class DTLZ1(DTLZ):
         X_M = self.X_M(x)
         g = self.g(X_M)
         s1 = 0.5 * (1 + g)
-
-        # f1 = s1 * x[0] * x[1]
-        # f2 = s1 * x[0] * (1 - x[1])
-        # f3 = s1 * (1 - x[0])
-
-        for i in range(M):  # 3:[0 1 2] m=3
+        for i in range(M):
             f1 = s1
-            if i > 0: f1 *= (1 - x[M - 1 - i])
-            if i < M - 1: f1 *= np.prod(x[:M - 1 - i])
+            f1 *= np.prod(x[:M - 1 - i])
+            if i > 0: f1 *= 1 - x[M - 1 - i]
             f.append(f1)
         return f
-        # return [f1, f2, f3]
 
 
 class DTLZ4(DTLZ):
     def __init__(self):
-        super().__init__('dtlz4', 10, (0.0, 1.0))
+        super().__init__('dtlz4', 3, (0.0, 1.0))
         self.alpha = 100
 
     def g(self, X_M):
-        return np.sum((X_M - .5) ** 2)
+        return np.sum(np.square(X_M - .5))
 
     def f(self, x):
         f = []
@@ -162,21 +155,20 @@ class DTLZ4(DTLZ):
         g = self.g(X_M)
         alpha = self.alpha
         M = self.obj
-
         for i in range(M):
             f1 = (1 + g)
-            if i > 0: f1 *= np.sin(x[M - 1 - i] ** alpha * np.pi / 2)
-            if i < M - 1: f1 *= np.prod(np.cos(x[:M - 1 - i] ** alpha * np.pi / 2))
+            f1 *= np.prod(np.cos(np.power(x[:M - 1 - i], alpha) * np.pi / 2))
+            if i > 0: f1 *= np.sin(np.power(x[M - 1 - i], alpha) * np.pi / 2)
             f.append(f1)
         return f
 
 
 class DTLZ5(DTLZ):
     def __init__(self):
-        super().__init__('dtlz5', 10, (0.0, 1.0))
+        super().__init__('dtlz5', 3, (0.0, 1.0))
 
     def g(self, X_M):
-        return np.sum((X_M - .5) ** 2)
+        return np.sum(np.square(X_M - 0.5))
 
     def theta(self, x, g):
         theta = (np.pi / (4 * (1 + g))) * (1 + 2 * g * x)
@@ -189,18 +181,12 @@ class DTLZ5(DTLZ):
         g = self.g(X_M)
         theta = self.theta(x, g)
         M = self.obj
-
-        f0 = (1 + g) * np.cos(theta[0] * np.pi / 2) * np.cos(theta[1] * np.pi / 2)
-        f1 = (1 + g) * np.cos(theta[0] * np.pi / 2) * np.sin(theta[1] * np.pi / 2)
-        f2 = (1 + g) * np.sin(theta[0] * np.pi / 2)
-
-        # for i in range(M):
-        #     f1 = (1+g)
-        #     if i > 0:   f1 *= np.sin(theta[M-1-i]*np.pi/2)
-        #     if i < M-1: f1 *= np.prod(np.cos(theta[:M-1-i]*np.pi/2))
-        #     f.append(f1)
-        # return f
-        return [f0, f1, f2]
+        for i in range(M):
+            f1 = (1+g)
+            if i > 0:   f1 *= np.sin(theta[M-1-i]*np.pi/2)
+            if i < M-1: f1 *= np.prod(np.cos(theta[:M-1-i]*np.pi/2))
+            f.append(f1)
+        return f
 
 
 class MyNSGAII:
@@ -261,6 +247,7 @@ class MyNSGAII:
             dom_count = 0
             rank = np.Inf
             for q_index in range(len(population)):
+                if q_index == p_index: continue
                 if self._is_domination(p_index, q_index):
                     dom_solution.append(q_index)
                 elif self._is_domination(q_index, p_index):
@@ -286,32 +273,37 @@ class MyNSGAII:
             fronts.append(front_next)
         self.pop_fronts = np.asarray(fronts)
 
+    def __find_duplicates(self, X, epsilon=1e-16):
+        D = sp.distance.cdist(X.astype(float), X.astype(float))
+        D[np.triu_indices(len(X))] = np.Inf
+        is_duplicate = np.any(D <= epsilon, axis=1)
+        return is_duplicate
+
     def _compute_crowd(self, fronts):
-        list_crowd = [-1] * len(self.population)
+        self.pop_crowd = np.full(len(self.population), -1.0)
         for front in fronts:
-            if len(front) == 0: break
-            col_fitness = self.pop_fitness[front]
-            tree = sp.cKDTree(col_fitness)
+            F = self.pop_fitness[front]
+            n_points, n_obj = F.shape
+            if n_points <= 2:
+                crowding = np.full(n_points, np.Inf)
+            else:
+                is_unique = np.where(np.logical_not(self.__find_duplicates(F, epsilon=1e-32)))[0]
+                _F = F[is_unique]
+                I = np.argsort(_F, axis=0, kind='mergesort')
+                _F = _F[I, np.arange(n_obj)]
+                dist = np.row_stack([_F, np.full(n_obj, np.Inf)]) - np.row_stack([np.full(n_obj, -np.Inf), _F])
+                norm = np.max(_F, axis=0) - np.min(_F, axis=0)
+                norm[norm == 0] = np.nan
+                dist_to_last, dist_to_next = dist, np.copy(dist)
+                dist_to_last, dist_to_next = dist_to_last[:-1] / norm, dist_to_next[1:] / norm
+                dist_to_last[np.isnan(dist_to_last)] = 0.0
+                dist_to_next[np.isnan(dist_to_next)] = 0.0
+                J = np.argsort(I, axis=0)
+                _cd = np.sum(dist_to_last[J, np.arange(n_obj)] + dist_to_next[J, np.arange(n_obj)], axis=1) / n_obj
+                crowding = np.zeros(n_points)
+                crowding[is_unique] = _cd
             for i in range(len(front)):
-                dis, front_index = tree.query(col_fitness[i], k=3)
-                list_crowd[front[i]] = dis[1] + dis[2]
-            for i in range(self.pro_obj):
-                list_crowd[front[np.argmax(col_fitness[:, i])]] = np.Inf
-                list_crowd[front[np.argmin(col_fitness[:, i])]] = np.Inf
-            # table = np.column_stack((front, col_fitness))
-            # index_fitness_table = table[np.argsort(table[:, 1:], axis=0, kind='mergesort'), :]
-            # table = col_fitness
-            # index_fitness_table = table[np.argsort(table, axis=0, kind='mergesort'), :]
-            # print(index_fitness_table.shape)
-            # for i in range(len(front)):
-            #     if i == 0 or i == len(index_fitness_table) - 1:
-            #         list_crowd[int(index_fitness_table[i][0])] = np.Inf
-            #     else:
-            #         crowd = 0
-            #         for j in range(self.pro_obj):
-            #             crowd += abs(index_fitness_table[i + 1][j + 1] - index_fitness_table[i - 1][j + 1])
-            #         list_crowd[int(index_fitness_table[i][0])] = crowd
-        self.pop_crowd = np.asarray(list_crowd)
+                self.pop_crowd[int(front[i])] = crowding[i]
 
     def _select_parent(self):
         parents = []
@@ -425,9 +417,14 @@ class MyNSGAII:
         display_data = self.pop_fitness[self.pop_fronts[0]]
         if self.pro_obj == 2:
             plt.scatter(display_data[:, 0], display_data[:, 1])
+            plt.xlabel('f1')
+            plt.ylabel('f2')
             plt.show()
         elif self.pro_obj == 3:
             fig = plt.figure()
             ax = fig.add_subplot(projection='3d')
             ax.scatter(display_data[:, 0], display_data[:, 1], display_data[:, 2])
+            ax.set_xlabel('f1')
+            ax.set_ylabel('f2')
+            ax.set_zlabel('f3')
             plt.show()
