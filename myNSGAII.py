@@ -182,9 +182,9 @@ class DTLZ5(DTLZ):
         theta = self.theta(x, g)
         M = self.obj
         for i in range(M):
-            f1 = (1+g)
-            if i > 0:   f1 *= np.sin(theta[M-1-i]*np.pi/2)
-            if i < M-1: f1 *= np.prod(np.cos(theta[:M-1-i]*np.pi/2))
+            f1 = (1 + g)
+            if i > 0:   f1 *= np.sin(theta[M - 1 - i] * np.pi / 2)
+            if i < M - 1: f1 *= np.prod(np.cos(theta[:M - 1 - i] * np.pi / 2))
             f.append(f1)
         return f
 
@@ -194,9 +194,11 @@ class MyNSGAII:
                  max_gen: int,
                  pop_size: int,
                  eta_crossover: float,
-                 eta_mutate: float):
+                 eta_mutate: float,
+                 eta_elitism: float = 0.0):
         self.eta_mutate = eta_mutate
         self.eta_crossover = eta_crossover
+        self.eta_elitism = eta_elitism
         self.max_gen = max_gen
         self.population = None
         self.pop_size = pop_size
@@ -376,17 +378,20 @@ class MyNSGAII:
         igd = np.mean(igd)
         self.pop_igd.append(igd)
 
-    def _select_elitism(self):
+    def _select_elitism(self, eta_elitism):
         population = np.empty((0, self.pro_dim))
         size = 0
         for front in self.pop_fronts:
-            size += len(front)
+            filter_percent = ((len(self.population) - self.pop_size) / len(self.population)) * eta_elitism
+            filter_size = int(np.ceil(len(front) - len(front) * filter_percent))
+            filter_front = np.column_stack((front, self.pop_crowd[front]))
+            filter_index = filter_front[np.argsort(-filter_front[:, 1])][:, 0].astype(int)
+            size += filter_size
             if size < self.pop_size:
-                population = np.vstack((population, self.population[front]))
+                population = np.vstack((population, self.population[filter_index[:filter_size]]))
             else:
-                tmp = np.column_stack((front, self.pop_crowd[front]))
-                tmp = self.population[tmp[np.argsort(-tmp[:, 1])][:, 0].astype(int)]
-                population = np.vstack((population, tmp[:(len(front) - size + self.pop_size)]))
+                population = np.vstack(
+                    (population, self.population[filter_index[:(len(front) - size + self.pop_size)]]))
         self.population = np.asarray(population)
 
     def run(self):
@@ -410,7 +415,7 @@ class MyNSGAII:
             self._compute_igd()
             # elitism select
             if gen != self.max_gen - 1:
-                self._select_elitism()
+                self._select_elitism(self.eta_elitism)
             # terminate
         plt.boxplot(self.pop_igd, showfliers=False)
         plt.show()
